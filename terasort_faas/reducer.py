@@ -94,7 +94,8 @@ class Reducer():
 
     
     def write(self):
-        serialized_partition = ''.join(self.df)
+        serialized_partition = ''.join(self.df).encode()
+        print(serialized_partition[:100])
 
         self.execution_data["serialize_time"] = time.time()
 
