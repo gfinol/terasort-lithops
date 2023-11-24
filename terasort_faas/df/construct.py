@@ -19,7 +19,7 @@ def construct_df(key_list, value_list) -> pl.DataFrame:
 def concat_progressive(
         data: List[bytes]) \
         -> pl.DataFrame:
-    df = None
+    df = []
 
     for r_i, r in enumerate(data):
 
@@ -31,9 +31,6 @@ def concat_progressive(
             data[r_i] = b""
             gc.collect()
 
-            if df is None:
-                df = new_chunk
-            else:
-                df = pl.concat([df, new_chunk])
-
+            df.extend(new_chunk)
+    # todo check if df is list of bytes or str
     return df

@@ -90,13 +90,11 @@ class Reducer():
 
 
     def sort(self):
-        
-        self.df = self.df.sort("0")
+        self.df.sort()
 
     
     def write(self):
-
-        serialized_partition = serialize(self.df)
+        serialized_partition = ''.join(self.df)
 
         self.execution_data["serialize_time"] = time.time()
 
