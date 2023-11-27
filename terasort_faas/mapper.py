@@ -1,5 +1,5 @@
 import gc
-from typing import Dict
+from typing import Dict, List
 from lithops import Storage
 from terasort_faas.df import construct_df,  serialize_partitions
 from terasort_faas.read_terasort_data import read_terasort_data
@@ -13,7 +13,7 @@ import numpy as np
 class Mapper:
 
     storage: Storage
-    partitions: Dict[int, bytes]
+    partitions: List[bytes]
 
     def __init__(self, 
                  partition_id: int,
@@ -48,15 +48,15 @@ class Mapper:
         self.construct()
 
         self.execution_data["construct_time"] = time.time()
-        self.execution_data["total_rows"] = len(self.df)
-        row_counts = np.unique(self.partitioning, return_counts=True)
-        print(row_counts)
-        self.execution_data["partition_rows"] = { int(k): int(v) for k, v
-                                                 in zip(row_counts[0], row_counts[1])}
+        # self.execution_data["total_rows"] = len(self.df)
+        # row_counts = np.unique(self.partitioning, return_counts=True)
+        # print(row_counts)
+        # self.execution_data["partition_rows"] = { int(k): int(v) for k, v
+        #                                          in zip(row_counts[0], row_counts[1])}
 
         self.serialize()
 
-        self.execution_data["partition_sizes"] = { p_id: len(p) for p_id, p in self.partitions.items() }
+        # self.execution_data["partition_sizes"] = { p_id: len(p) for p_id, p in self.partitions.items() }
         self.execution_data["exchange_start"] = time.time()
 
 
@@ -89,28 +89,27 @@ class Mapper:
 
     def construct(self):
         
-        keys_list, values_list, self.partitioning = read_terasort_data(self.data, self.reduce_partitions)
+        self.line_list = read_terasort_data(self.data, self.reduce_partitions)
 
         del self.data
         gc.collect()
 
-        self.df = construct_df(keys_list, values_list)
-        print("Read %d row"%(len(self.df)))
-        del keys_list
-        del values_list
-        gc.collect()
+        # self.df = construct_df(keys_list, values_list)
+        # print("Read %d row"%(len(self.df)))
+        # del keys_list
+        # del values_list
+        # gc.collect()
 
 
     def serialize(self):
 
         self.partitions = serialize_partitions(
             self.reduce_partitions,
-            self.df, 
-            self.partitioning
+            self.line_list
         )
 
-        del self.df
-        del self.partitioning
+        del self.line_list
+        # del self.partitioning
         gc.collect()
 
 
@@ -128,7 +127,7 @@ class Mapper:
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.partitions)) as executor:
 
-            for reducer_id, data in self.partitions.items():
+            for reducer_id, data in enumerate(self.partitions):
 
                 subpartition_id = base_id + reducer_id
 

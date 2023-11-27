@@ -45,9 +45,8 @@ def read_terasort_data(data, num_partitions):
     cdef int64_t data_len = len(data)
     cdef uint64_t range_per_part = ((max_value - min_value) // num_partitions)
 
-    cdef list key_list = []
-    cdef list value_list = []
-    cdef list partition_list = []
+    cdef list line_list = [[] for i in range(num_partitions)]
+    # cdef list partition_list = []
 
     data_byte_string = data
     cdef char * cdata = data_byte_string
@@ -60,19 +59,17 @@ def read_terasort_data(data, num_partitions):
         
         memcpy(line, cdata + (current_pos * sizeof(char)), sizeof(char)*100)
         partition = get_partition(line, range_per_part)
-        key = line[0:10].decode('utf-8')
-        value = line[10:100].decode('utf-8')
 
-        key_list.append(key)
-        value_list.append(value)
-        partition_list.append(partition)
+
+        line_list[partition].append(line)
+        # partition_list.append(partition)
         
         current_pos += 100
 
 
     # fclose(cfile)
 
-    return key_list, value_list, np.array(partition_list, dtype=np.uint16)
+    return line_list #, np.array(partition_list, dtype=np.uint16)
 
 
 # @cython.boundscheck(False)

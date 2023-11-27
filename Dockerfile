@@ -46,6 +46,7 @@ RUN pip install --upgrade --ignore-installed pip wheel six setuptools \
 # Set working directory to function root directory
 WORKDIR ${FUNCTION_DIR}
 
+
 # Add Lithops
 COPY lithops_lambda.zip ${FUNCTION_DIR}
 RUN unzip lithops_lambda.zip \
@@ -55,9 +56,14 @@ RUN unzip lithops_lambda.zip \
     && mv entry_point.py handler/
 
 # Put your dependencies here, using RUN pip install... or RUN apt install...
-RUN wget https://github.com/GEizaguirre/terasort-lithops/archive/refs/heads/main.zip \
-    && unzip main.zip \
-    && cd terasort-lithops-main \
+#RUN wget https://github.com/GEizaguirre/terasort-lithops/archive/refs/heads/main.zip \
+#    && unzip main.zip \
+#    && cd terasort-lithops-main \
+#    && pip3 install -e . \
+#    && cd ..
+COPY . ${FUNCTION_DIR}/terasort_lithops
+
+RUN cd ${FUNCTION_DIR}/terasort_lithops \
     && pip3 install -e . \
     && cd ..
 

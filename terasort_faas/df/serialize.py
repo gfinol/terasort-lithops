@@ -1,7 +1,8 @@
 import polars as pl
 from io import BytesIO
 import numpy as np
-from typing import Dict
+from typing import Dict, List
+
 
 def serialize(partition_obj: pl.DataFrame) -> bytes:
 
@@ -15,19 +16,10 @@ def deserialize(b: bytes) -> pl.DataFrame:
 
 
 def serialize_partitions(num_partitions: int,
-                         partition_obj: pl.DataFrame,
-                         hash_list: np.ndarray) \
-        -> Dict[int, bytes]:
-    
-    serialized_partitions = {}
-
-    for destination_partition in range(num_partitions):
-        serialization_result = _serialize_partition(destination_partition,
-                                                    partition_obj,
-                                                    hash_list)
-
-        serialized_partitions[destination_partition] = serialization_result
-
+                         partition_obj: List[List[bytes]]) \
+        -> List[bytes]:
+    print(partition_obj)
+    serialized_partitions = [b''.join(part) for part in partition_obj]
     return serialized_partitions
 
 
