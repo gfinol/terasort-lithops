@@ -252,6 +252,9 @@ def result_summary(fname):
         stats['avg_aggregation_time'], stats['desv_aggregation_time']),
         "    Average sort time: %.2f \N{PLUS-MINUS SIGN} %.2fs" % (stats['avg_sort_time'], stats['desv_sort_time']),
         "    Average write time: %.2f \N{PLUS-MINUS SIGN} %.2fs" % (stats['avg_write_time'], stats['desv_write_time']),
+        "Total cost: $%.2f" % (data["cost"]["total_cost"]),
+        "    Lithops cost: $%.2f" % (data["cost"]["lithops_cost"]["total_cost"]),
+        "    Shuffle cost: $%.2f" % (data["cost"]["shuffle_cost"]),
     ]
 
     print_text_in_box(texts)
