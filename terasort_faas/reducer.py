@@ -11,13 +11,14 @@ class Reducer():
 
     storage: Storage
 
-    def __init__(self, 
+    def __init__(self,
                  partition_id,
                  map_partitions,
                  reduce_partitions,
                  timestamp_prefix,
                  bucket,
-                 key):
+                 key,
+                 upload_id):
 
         self.partition_id = partition_id
         self.map_partitions = map_partitions
@@ -27,6 +28,7 @@ class Reducer():
         self.key = key
         self.execution_data = dict()
         self.execution_data["worker_id"] = partition_id
+        self.upload_id = upload_id
 
 
 
@@ -53,14 +55,15 @@ class Reducer():
 
         self.execution_data["end_time"] = time.time()
 
-        return {"reducer_%d"%(self.partition_id): self.execution_data}
+        return {"reducer_%d"%(self.partition_id): self.execution_data,
+                "part": self.part}
 
-    
+
     def exchange(self):
 
-        map_parts = [ (map_partition * self.reduce_partitions) 
+        map_parts = [ (map_partition * self.reduce_partitions)
                      + self.partition_id for map_partition in range(self.map_partitions) ]
-        
+
         # random.shuffle(map_parts)
 
         futures = []
@@ -70,21 +73,21 @@ class Reducer():
             for subpartition_id in map_parts:
 
                 future = executor.submit(
-                     reader, 
-                     f"{self.timestamp_prefix}/intermediates/{subpartition_id}", 
+                     reader,
+                     f"{self.timestamp_prefix}/intermediates/{subpartition_id}",
                      self.bucket,
                      self.storage)
-                
+
                 futures.append(future)
 
         results = [ future.result() for future in futures ]
         self.partitions = [ f[0] for f in results ]
         self.execution_data["read_times"] = { f_id: f[1] for f_id, f in enumerate(results) }
         self.execution_data["read_sizes"] = { f_id: f[2] for f_id, f in enumerate(results) }
-    
+
 
     def construct(self):
-        
+
         self.df = concat_progressive(self.partitions)
 
 
@@ -92,16 +95,23 @@ class Reducer():
     def sort(self):
         self.df.sort()
 
-    
+
     def write(self):
         serialized_partition = b''.join(self.df)
         print(serialized_partition[:100])
 
         self.execution_data["serialize_time"] = time.time()
 
-        self.storage.put_object(self.bucket,
-                                f"{self.timestamp_prefix}/{OUTPUT_PREFIX}_{self.partition_id}",
-                                serialized_partition)
+        # Upload using multipart upload
+        client = self.storage.get_client()
+        response = client.upload_part(Bucket=self.bucket, Key=f'{self.key}_sorted', PartNumber=self.partition_id + 1,
+                           UploadId=self.upload_id, Body=serialized_partition)
+
+        self.part = {'PartNumber': self.partition_id + 1, 'ETag': response['ETag']}
+
+        # self.storage.put_object(self.bucket,
+        #                         f"{self.timestamp_prefix}/{OUTPUT_PREFIX}_{self.partition_id}",
+        #                         serialized_partition)
 
 
 

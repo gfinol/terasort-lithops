@@ -1,6 +1,6 @@
 import os
 import click
-from lithops import FunctionExecutor
+from lithops import FunctionExecutor, Storage
 from datetime import datetime
 import time
 from terasort_faas.IO import get_data_size
@@ -67,6 +67,16 @@ def run_terasort(
                for partition_id in range(map_parallelism)
     ]
     
+
+
+    start_time = time.time()
+    # run_mappers
+    map_futures = executor.map(run_mapper, mappers)
+
+    boto = Storage().get_client()
+    multipart_response = boto.create_multipart_upload(Bucket=bucket, Key=f"{key}_sorted")
+    upload_id = multipart_response['UploadId']
+
     reducers = [
         Reducer(
             partition_id,
@@ -74,14 +84,11 @@ def run_terasort(
             reduce_parallelism,
             timestamp_prefix,
             bucket,
-            key
+            key,
+            upload_id
         )
         for partition_id in range(reduce_parallelism)
     ]
-
-    start_time = time.time()
-    # run_mappers
-    map_futures = executor.map(run_mapper, mappers)
 
     executor.wait(map_futures, return_when=20)
 
@@ -92,7 +99,16 @@ def run_terasort(
 
     click.echo(bcolors.OKGREEN+bcolors.BOLD+"Client sort time: %.2f s"%(end_time-start_time)+bcolors.ENDC+bcolors.ENDC)
 
-    function_results = executor.get_result(map_futures+reducer_futures)
+    reducers_results = executor.get_result(reducer_futures)
+
+    parts = [e['part'] for e in reducers_results]
+
+    mappers_results = executor.get_result(map_futures)
+
+    # Complete multipart upload
+    function_results = mappers_results + reducers_results
+    boto.complete_multipart_upload(Bucket=bucket, Key=f'{key}_sorted', UploadId=upload_id,
+                                     MultipartUpload={'Parts': parts})
 
     for result in function_results:
         for k, v in result.items():
