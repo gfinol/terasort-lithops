@@ -1,6 +1,6 @@
 polars
 numpy
-lithops==3.0.1
+lithops==3.0.0
 boto3
 Cython
 pyarrow
