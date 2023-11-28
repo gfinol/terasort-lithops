@@ -125,6 +125,7 @@ def run_terasort(
         "start_time": start_time,
         "end_time": end_time
     }
+    execution_logs["compression"] = False
     execution_logs["sort"] = execution_data
     # execution_logger.info(
     #     yaml.dump(
