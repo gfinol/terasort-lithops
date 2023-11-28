@@ -118,6 +118,8 @@ def run_terasort(
         #         default_flow_style=False
         #     ))
 
+    execution_logs["map_futures"] = map_futures
+    execution_logs["red_futures"] = reducer_futures
     execution_data = {
         "start_time": start_time,
         "end_time": end_time
