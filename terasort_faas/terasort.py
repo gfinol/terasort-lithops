@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 from terasort_faas.IO import get_data_size
 from terasort_faas.aux import remove_intermediates
+from terasort_faas.cost_reporter import lithops_cost, s3_direct_shuffle_cost
 from terasort_faas.logging.logging import setup_logger
 from terasort_faas.logging.results import result_summary, compute_stats
 from terasort_faas.mapper import Mapper, run_mapper
@@ -131,6 +132,13 @@ def run_terasort(
     #         default_flow_style=False
     #     )
     # )
+
+    l_cost = lithops_cost(map_futures+reducer_futures, runtime_memory)
+    shuffle_cost = s3_direct_shuffle_cost(map_parallelism, reduce_parallelism)
+    cost = {'total_cost': l_cost['total_cost'] + shuffle_cost,
+            'lithops_cost': l_cost,
+            'shuffle_cost': shuffle_cost}
+    execution_logs['cost'] = cost
 
     execution_logs['execution_results'] = compute_stats(execution_logs)
     log_file = os.path.join(LOG_PATH, "%s.pickle"%(timestamp_prefix))
