@@ -47,28 +47,23 @@ def run_terasort(
                 "map_parallelism": map_parallelism,
                 "reduce_parallelism": reduce_parallelism,
                 "dataset_size": dataset_size / 1024 / 1024,
-                "timestamp": timestamp_prefix
+                "timestamp": timestamp_prefix,
+                "runtime": runtime_name,
+                "runtime_memory": runtime_memory
             }
     }
 
-    # execution_logger.info(yaml.dump(
-    #         execution_logs, 
-    #         default_flow_style=False
-    #     ))
-
     mappers = [
-                Mapper(
-                    partition_id, 
-                    map_parallelism, 
-                    reduce_parallelism, 
-                    timestamp_prefix, 
-                    bucket, 
-                    key
-                )
-               for partition_id in range(map_parallelism)
+        Mapper(
+            partition_id,
+            map_parallelism,
+            reduce_parallelism,
+            timestamp_prefix,
+            bucket,
+            key
+        )
+        for partition_id in range(map_parallelism)
     ]
-    
-
 
     start_time = time.time()
     # run_mappers
@@ -102,14 +97,14 @@ def run_terasort(
 
     reducers_results = executor.get_result(reducer_futures)
 
-    parts = [e['part'] for e in reducers_results]
+    # parts = [e['part'] for e in reducers_results]
 
     mappers_results = executor.get_result(map_futures)
 
     # Complete multipart upload
     function_results = mappers_results + reducers_results
-    boto.complete_multipart_upload(Bucket=bucket, Key=f'{key}_sorted', UploadId=upload_id,
-                                     MultipartUpload={'Parts': parts})
+    # boto.complete_multipart_upload(Bucket=bucket, Key=f'{key}_sorted', UploadId=upload_id,
+    #                                  MultipartUpload={'Parts': parts})
 
     for result in function_results:
         for k, v in result.items():
@@ -119,22 +114,20 @@ def run_terasort(
         #         default_flow_style=False
         #     ))
 
-    execution_logs["map_futures"] = map_futures
-    execution_logs["red_futures"] = reducer_futures
+    execution_logs["map_data"] = [{'stats': future.stats, 'result': res, 'runtime_memory': future.runtime_memory} for future, res in zip(map_futures, mappers_results)]
+    execution_logs["red_data"] = [{'stats': future.stats, 'result': res, 'runtime_memory': future.runtime_memory} for future, res in zip(map_futures, mappers_results)]
     execution_data = {
         "start_time": start_time,
         "end_time": end_time
     }
     execution_logs["compression"] = False
     execution_logs["sort"] = execution_data
-    # execution_logger.info(
-    #     yaml.dump(
-    #         {"sort": execution_data}, 
-    #         default_flow_style=False
-    #     )
-    # )
 
-    l_cost = lithops_cost(map_futures+reducer_futures, runtime_memory)
+    map_cost = lithops_cost(map_futures, runtime_memory)
+    red_cost = lithops_cost(reducer_futures, runtime_memory)
+    l_cost = {'total_cost': map_cost['total_cost'] + red_cost['total_cost'],
+                'map_cost': map_cost,
+                'red_cost': red_cost}
     shuffle_cost = s3_direct_shuffle_cost(map_parallelism, reduce_parallelism)
     cost = {'total_cost': l_cost['total_cost'] + shuffle_cost,
             'lithops_cost': l_cost,
@@ -144,7 +137,7 @@ def run_terasort(
     execution_logs['execution_results'] = compute_stats(execution_logs)
     log_file = os.path.join(LOG_PATH, "%s.pickle"%(timestamp_prefix))
     pickle.dump(execution_logs, open(log_file, "wb"))
-    # log_file = os.path.join(LOG_PATH, "%s.yaml"%(timestamp_prefix))
+
     print("Log file: %s"%(log_file))
 
     click.echo("\n\nRemoving intermediates...")
