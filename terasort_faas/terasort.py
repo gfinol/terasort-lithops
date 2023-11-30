@@ -134,6 +134,8 @@ def run_terasort(
             'shuffle_cost': shuffle_cost}
     execution_logs['cost'] = cost
 
+    executor.plot(fs=map_futures+reducer_futures, dst=f'{LOG_PATH}{timestamp_prefix}')
+
     execution_logs['execution_results'] = compute_stats(execution_logs)
     log_file = os.path.join(LOG_PATH, "%s.pickle"%(timestamp_prefix))
     pickle.dump(execution_logs, open(log_file, "wb"))
