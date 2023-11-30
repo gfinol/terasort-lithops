@@ -114,8 +114,14 @@ def run_terasort(
         #         default_flow_style=False
         #     ))
 
-    execution_logs["map_data"] = [{'stats': future.stats, 'result': res, 'runtime_memory': future.runtime_memory} for future, res in zip(map_futures, mappers_results)]
-    execution_logs["red_data"] = [{'stats': future.stats, 'result': res, 'runtime_memory': future.runtime_memory} for future, res in zip(map_futures, mappers_results)]
+    execution_logs["map_data"] = [
+        {'stats': future.stats, 'result': res, 'runtime_memory': future.runtime_memory}
+        for future, res in zip(map_futures, mappers_results)
+    ]
+    execution_logs["red_data"] = [
+        {'stats': future.stats, 'result': res, 'runtime_memory': future.runtime_memory}
+        for future, res in zip(reducer_futures, reducers_results)
+    ]
     execution_data = {
         "start_time": start_time,
         "end_time": end_time
