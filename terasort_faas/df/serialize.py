@@ -18,7 +18,7 @@ def deserialize(b: bytes) -> pl.DataFrame:
 def serialize_partitions(num_partitions: int,
                          partition_obj: List[List[bytes]]) \
         -> List[bytes]:
-    print(partition_obj)
+    # print(partition_obj)
     serialized_partitions = [b''.join(part) for part in partition_obj]
     return serialized_partitions
 
