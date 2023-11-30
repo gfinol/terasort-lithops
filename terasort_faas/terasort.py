@@ -97,14 +97,14 @@ def run_terasort(
 
     reducers_results = executor.get_result(reducer_futures)
 
-    # parts = [e['part'] for e in reducers_results]
+    parts = [e['part'] for e in reducers_results]
 
     mappers_results = executor.get_result(map_futures)
 
     # Complete multipart upload
     function_results = mappers_results + reducers_results
-    # boto.complete_multipart_upload(Bucket=bucket, Key=f'{key}_sorted', UploadId=upload_id,
-    #                                  MultipartUpload={'Parts': parts})
+    boto.complete_multipart_upload(Bucket=bucket, Key=f'{key}_sorted', UploadId=upload_id,
+                                     MultipartUpload={'Parts': parts})
 
     for result in function_results:
         for k, v in result.items():
