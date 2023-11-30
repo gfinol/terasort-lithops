@@ -27,13 +27,8 @@ def setup_logger(timestamp: str = ""):
         console_logger.info(f"Creating directory for execution logs ({LOG_PATH})")
         os.makedirs(LOG_PATH)
 
-    execution_handler = logging.FileHandler(os.path.join(LOG_PATH, "%s.yaml"%(timestamp)))
-    execution_handler.setLevel(logging.DEBUG)
 
-    execution_formatter = logging.Formatter("%(message)s")
-    execution_handler.setFormatter(execution_formatter)
 
-    execution_logger.addHandler(execution_handler)
 
 
 
