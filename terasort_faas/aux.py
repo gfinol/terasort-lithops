@@ -1,3 +1,5 @@
+import time
+
 from lithops import FunctionExecutor
 from terasort_faas.df import deserialize
 from terasort_faas.config import OUTPUT_PREFIX
@@ -54,6 +56,7 @@ def warm_up_functions(runtime, runtime_memory):
     executor = FunctionExecutor(runtime=runtime, runtime_memory=runtime_memory)
 
     def foo(x):
+        time.sleep(5)
         return x
     
     fts = executor.map(foo, range(1000))
