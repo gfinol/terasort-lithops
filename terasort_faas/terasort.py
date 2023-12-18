@@ -126,7 +126,7 @@ def run_terasort(
         "start_time": start_time,
         "end_time": end_time
     }
-    execution_logs["compression"] = False
+    execution_logs["compression"] = True
     execution_logs["sort"] = execution_data
 
     map_cost = lithops_cost(map_futures, runtime_memory)
