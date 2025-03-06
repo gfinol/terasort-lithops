@@ -12,13 +12,13 @@ from terasort_faas.terasort import run_terasort
 @click.option("--warm_up", type=bool, default=False, help="Warm up cloud functions before execution (recommended at the very first execution of a set)")
 def run(bucket, key, map_parallelism, runtime_name, reduce_parallelism, runtime_memory, warm_up):
 
-    if warm_up:
-        warm_up_functions(runtime_name, runtime_memory)
+    # if warm_up:
+    #     warm_up_functions(runtime_name, runtime_memory)
 
     if reduce_parallelism is None:
         reduce_parallelism = map_parallelism
 
-    run_terasort(bucket, key, map_parallelism, reduce_parallelism, runtime_name, runtime_memory)
+    run_terasort(bucket, key, map_parallelism, reduce_parallelism, runtime_name, runtime_memory, warm_up)
 
 
 if __name__ == "__main__":

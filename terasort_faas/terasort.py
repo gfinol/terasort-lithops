@@ -4,7 +4,7 @@ from lithops import FunctionExecutor, Storage
 from datetime import datetime
 import time
 from terasort_faas.IO import get_data_size
-from terasort_faas.aux import remove_intermediates
+from terasort_faas.aux import remove_intermediates, warm_up_functions
 from terasort_faas.cost_reporter import lithops_cost, s3_direct_shuffle_cost
 from terasort_faas.logging.logging import setup_logger
 from terasort_faas.logging.results import result_summary, compute_stats
@@ -27,6 +27,7 @@ def run_terasort(
         reduce_parallelism,
         runtime_name,
         runtime_memory,
+        warm_up=False
 ):
     
     timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -34,6 +35,9 @@ def run_terasort(
     setup_logger(timestamp_prefix)
     
     executor = FunctionExecutor(runtime_memory=runtime_memory, runtime=runtime_name)
+
+    if warm_up:
+        warm_up_functions(runtime_name, runtime_memory, executor=executor, n=map_parallelism+reduce_parallelism)
 
     dataset_size = get_data_size(executor.storage, bucket, key)
 
