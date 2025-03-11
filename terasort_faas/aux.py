@@ -1,7 +1,10 @@
+import time
+
 from lithops import FunctionExecutor
 from terasort_faas.df import deserialize
 from terasort_faas.config import OUTPUT_PREFIX
 import sys
+import time
 import polars as pl
 import logging
 from terasort_faas.config import *
@@ -50,16 +53,17 @@ def remove_intermediates(executor, bucket, prefixes):
         executor.storage.delete_objects(bucket, keys)
 
 
-def warm_up_functions(runtime, runtime_memory):
+def warm_up_functions(runtime, runtime_memory, executor=None, n=1000):
 
     console_logger.info("Warming up functions.")
-
-    executor = FunctionExecutor(runtime=runtime, runtime_memory=runtime_memory)
+    if executor is None:
+        executor = FunctionExecutor(runtime=runtime, runtime_memory=runtime_memory)
 
     def foo(x):
+        time.sleep(5)
         return x
     
-    fts = executor.map(foo, range(1000))
+    fts = executor.map(foo, range(n))
     executor.wait(fts)
 
 

@@ -131,7 +131,7 @@ class Mapper:
                      timed_put,
                      self.storage,
                      self.bucket,
-                     f"{hash_to_5_chars(reducer_id)}/{self.timestamp_prefix}/intermediates/{subpartition_id}", 
+                     f"terasort-lithops/{hash_to_5_chars(reducer_id)}/{self.timestamp_prefix}/intermediates/{subpartition_id}",
                      data)
                 
                 futures.append(future)

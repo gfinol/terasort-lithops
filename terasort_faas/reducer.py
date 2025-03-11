@@ -73,7 +73,7 @@ class Reducer():
 
                 future = executor.submit(
                      reader, 
-                     f"{my_prefix}/{self.timestamp_prefix}/intermediates/{subpartition_id}", 
+                     f"terasort-lithops/{my_prefix}/{self.timestamp_prefix}/intermediates/{subpartition_id}",
                      self.bucket,
                      self.storage)
                 
@@ -93,13 +93,14 @@ class Reducer():
 
     def sort(self):
         
-        self.df = self.df.sort("0")
-
+        # self.df = self.df.sort("0")
+        self.df.sort()
     
     def write(self):
 
-        serialized_partition = serialize(self.df)
-
+        # serialized_partition = serialize(self.df)
+        serialized_partition = ''.join(self.df).encode()
+        print(serialized_partition[:100])
         self.execution_data["serialize_time"] = time.time()
 
         self.storage.put_object(self.bucket,

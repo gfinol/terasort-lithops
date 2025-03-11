@@ -18,22 +18,24 @@ def construct_df(key_list, value_list) -> pl.DataFrame:
 
 def concat_progressive(
         data: List[bytes]) \
-        -> pl.DataFrame:
-    df = None
+        -> List[str]: # -> pl.DataFrame:
+    # df = None
+    df = []
 
     for r_i, r in enumerate(data):
 
         if len(data[r_i]) > 0:
 
             new_chunk = deserialize(data[r_i])
-
+            iter = map(lambda x: x[0] + x[1],  zip(new_chunk['0'], new_chunk['1']))
             # Remove data for memory efficiency
             data[r_i] = b""
             gc.collect()
 
-            if df is None:
-                df = new_chunk
-            else:
-                df = pl.concat([df, new_chunk])
+            # if df is None:
+            #     df = new_chunk
+            # else:
+            #     df = pl.concat([df, new_chunk])
+            df.extend(iter)
 
     return df
