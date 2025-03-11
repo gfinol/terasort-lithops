@@ -145,7 +145,7 @@ def run_terasort(
     print("Log file: %s"%(log_file))
 
     click.echo("\n\nRemoving intermediates...")
-    remove_intermediates(executor, bucket, ["terasort-lithops", timestamp_prefix]+[hash_to_5_chars(r) for r in range(reduce_parallelism)])
+    remove_intermediates(executor, bucket, ["terasort-lithops", timestamp_prefix])
 
     result_summary(log_file)
     
