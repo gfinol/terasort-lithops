@@ -1,10 +1,8 @@
 polars
 numpy
-lithops==3.0.1
+lithops
 boto3
 Cython
 pyarrow
 click
 pandas
-hashlib
-base64
